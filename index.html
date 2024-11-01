@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Current Time and Persistent Timer</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            margin: 0;
+            background-size: cover;
+            background-position: center;
+            color: white;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+            transition: background-image 1s ease-in-out;
+        }
+        h1, h2 {
+            margin: 10px 0;
+        }
+        #time, #timer {
+            font-size: 2.5rem;
+            font-weight: 300;
+        }
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            background-color: rgba(255, 255, 255, 0); /* Fully transparent */
+            color: white;
+            border: 1px solid white;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: transform 0.3s;
+            margin-top: 10px;
+        }
+        button:hover {
+            transform: translateY(-2px);
+        }
+    </style>
+    <script>
+        let timerStartTime;
+        let timerInterval;
+
+
+
+
+        function fetchBackgroundImage() {
+            const query = 'aesthetic,nature,calm,minimal'; // Aesthetic search keywords
+            fetch(`https://pixabay.com/api/?key=46836855-b944a17e0967b753b78734570&q=${query}&image_type=photo&orientation=horizontal&safesearch=true`)
+                .then(response => response.json())
+                .then(data => {
+                    if (data.hits.length > 0) {
+                        const randomImage = data.hits[Math.floor(Math.random() * data.hits.length)].largeImageURL;
+                        document.body.style.backgroundImage = `url(${randomImage})`;
+                    } else {
+                        console.error('No images found for the query.');
+                    }
+                })
+                .catch(error => console.error('Error fetching image:', error));
+        }
+
+        // Function to display the current time
+        function displayTime() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString();
+            document.getElementById('time').innerText = timeString;
+        }
+
+        // Function to calculate and display the timer
+        function updateTimer() {
+            const now = new Date();
+            const elapsedSeconds = Math.floor((now - timerStartTime) / 1000);
+            const minutes = Math.floor(elapsedSeconds / 60);
+            const remainingSeconds = elapsedSeconds % 60;
+            document.getElementById('timer').innerText = 
+                minutes + " min " + remainingSeconds + " sec";
+        }
+
+        // Function to delete timer data from local storage
+        function deleteTimerData() {
+            localStorage.removeItem('timerStartTime');
+            clearInterval(timerInterval);
+            document.getElementById('timer').innerText = "0 min 0 sec";
+            timerStartTime = new Date(); // Reset timer
+        }
+
+        // Function to toggle fullscreen mode
+        function toggleFullScreen() {
+            const button = document.getElementById('fullscreenButton');
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+                button.textContent = "Exit Full Screen";
+            } else {
+                if (document.exitFullscreen) {
+                    document.exitFullscreen();
+                    button.textContent = "Full Screen";
+                }
+            }
+        }
+
+        window.onload = function() {
+            // Check if timer start time exists in local storage
+            if (localStorage.getItem('timerStartTime')) {
+                timerStartTime = new Date(parseInt(localStorage.getItem('timerStartTime'), 10));
+            } else {
+                timerStartTime = new Date();
+                localStorage.setItem('timerStartTime', timerStartTime.getTime());
+            }
+
+            displayTime();
+            setInterval(displayTime, 1000); // Update the time every second
+            timerInterval = setInterval(updateTimer, 1000); // Update the timer every second
+
+            // Initial background fetch and set interval to update every 5 minutes
+            fetchBackgroundImage();
+            setInterval(fetchBackgroundImage, 300000); // 300,000 ms = 5 minutes
+        }
+    </script>
+</head>
+<body>
+    <h1>Current Time: <span id="time"></span></h1>
+    <h2>Timer: <span id="timer">0 min 0 sec</span></h2>
+    <button onclick="deleteTimerData()">Delete Timer Data</button>
+    <button id="fullscreenButton" onclick="toggleFullScreen()">Full Screen</button>
+</body>
+</html>
